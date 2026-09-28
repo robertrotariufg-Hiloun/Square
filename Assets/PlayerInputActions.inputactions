@@ -109,6 +109,17 @@
                     "action": "WallJump",
                     "isComposite": false,
                     "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "833585f9-fdbb-4912-95f3-736bbfa6eb64",
+                    "path": "<Keyboard>/space",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "WallJump",
+                    "isComposite": false,
+                    "isPartOfComposite": false
                 }
             ]
         }

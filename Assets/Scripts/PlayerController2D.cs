@@ -97,7 +97,6 @@ public class PlayerController2D : MonoBehaviour, IDamageable
     private InputAction moveAction;
     private InputAction jumpAction;
     private InputAction dashAction;
-    private InputAction wallJumpAction;
     private bool leftPressed;
     private bool rightPressed;
     private float keyboardMoveX;
@@ -126,14 +125,12 @@ public class PlayerController2D : MonoBehaviour, IDamageable
         moveAction = map.FindAction("Move");
         jumpAction = map.FindAction("Jump");
         dashAction = map.FindAction("Dash");
-        wallJumpAction = map.FindAction("WallJump");
 
         moveAction.performed += OnMoveInput;
         moveAction.canceled += OnMoveInput;
         jumpAction.performed += OnJumpPerformed;
         jumpAction.canceled += OnJumpCanceled;
         dashAction.performed += OnDashPerformed;
-        wallJumpAction.performed += OnWallJumpPerformed;
 
         map.Enable();
     }
@@ -145,7 +142,6 @@ public class PlayerController2D : MonoBehaviour, IDamageable
         jumpAction.performed -= OnJumpPerformed;
         jumpAction.canceled -= OnJumpCanceled;
         dashAction.performed -= OnDashPerformed;
-        wallJumpAction.performed -= OnWallJumpPerformed;
 
         inputActions.FindActionMap("Player").Disable();
     }
@@ -185,38 +181,33 @@ public class PlayerController2D : MonoBehaviour, IDamageable
         }
     }
 
-    private void OnWallJumpPerformed(InputAction.CallbackContext ctx)
-    {
-        if (isWallSliding || (isTouchingWall && !isGrounded))
-        {
-            WallJump();
-        }
-    }
-
     void Update()
     {
         float horizontal = keyboardMoveX;
 
         var gamepad = Gamepad.current;
 
-        float stickX = gamepad.leftStick.x.ReadValue();
-        if (Mathf.Abs(stickX) > 0.2f) horizontal = stickX;
-        if (gamepad.dpad.left.isPressed) horizontal -= 1f;
-        if (gamepad.dpad.right.isPressed) horizontal += 1f;
+        if (gamepad != null)
+        {
+            float stickX = gamepad.leftStick.x.ReadValue();
+            if (Mathf.Abs(stickX) > 0.2f) horizontal = stickX;
+            if (gamepad.dpad.left.isPressed) horizontal -= 1f;
+            if (gamepad.dpad.right.isPressed) horizontal += 1f;
 
-        if (gamepad.buttonSouth.wasPressedThisFrame)
-        {
-            isJumpHeld = true;
-            NormalJump();
-        }
-        else if (gamepad.buttonSouth.wasReleasedThisFrame)
-        {
-            isJumpHeld = false;
-        }
+            if (gamepad.buttonSouth.wasPressedThisFrame)
+            {
+                isJumpHeld = true;
+                NormalJump();
+            }
+            else if (gamepad.buttonSouth.wasReleasedThisFrame)
+            {
+                isJumpHeld = false;
+            }
 
-        if ((gamepad.rightTrigger.wasPressedThisFrame || gamepad.buttonWest.wasPressedThisFrame) && canDash && !isDashing)
-        {
-            StartCoroutine(DashRoutine());
+            if ((gamepad.rightTrigger.wasPressedThisFrame || gamepad.buttonWest.wasPressedThisFrame) && canDash && !isDashing)
+            {
+                StartCoroutine(DashRoutine());
+            }
         }
 
         moveInput.x = Mathf.Clamp(horizontal, -1f, 1f);
@@ -282,7 +273,8 @@ public class PlayerController2D : MonoBehaviour, IDamageable
 
         if (isWallSliding)
         {
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, Mathf.Max(rb.linearVelocity.y, -wallSlideSpeed));
+            rb.gravityScale = defaultGravity;
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, -wallSlideSpeed);
             return;
         }
 
@@ -347,7 +339,11 @@ public class PlayerController2D : MonoBehaviour, IDamageable
     {
         jumpBufferTimer = jumpBufferTime;
 
-        if (coyoteTimer > 0f)
+        if (isWallSliding || (isTouchingWall && !isGrounded))
+        {
+            WallJump();
+        }
+        else if (coyoteTimer > 0f)
         {
             Jump(jumpForce);
             PlaySound(jumpSFX);

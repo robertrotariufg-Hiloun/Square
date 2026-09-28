@@ -26,7 +26,7 @@ public class LevelManager : MonoBehaviour
     [SerializeField] private AudioClip gameOverMusic;
 
     public float levelTime;
-    public int deathCount;
+    public static int deathCount;
     public int score;
     private int bonusScore;
     private bool isLevelCompleted;
@@ -58,7 +58,7 @@ public class LevelManager : MonoBehaviour
         int seconds = Mathf.FloorToInt(levelTime % 60f);
 
         timerText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
-        deathsText.text = deathCount.ToString();
+        deathsText.text =  deathCount.ToString();
         healthBar.fillAmount = player.health / player.maxHealth;
     }
 
@@ -118,6 +118,7 @@ public class LevelManager : MonoBehaviour
     public void GoToMainMenu()
     {
         Time.timeScale = 1f;
+        deathCount = 0;
         SceneManager.LoadScene("MainMenu");
     }
 }
